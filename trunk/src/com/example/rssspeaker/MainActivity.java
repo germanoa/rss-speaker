@@ -32,7 +32,9 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
-    
+        View root = this.getWindow().getDecorView();
+        root.setBackgroundColor(17170450);
+        
         tts = new TextToSpeech(this, this);
     
         btnSpeak = (Button) findViewById(R.id.btnSpeak);
