@@ -88,8 +88,7 @@ public class MainActivity extends Activity implements TextToSpeech.OnInitListene
                 txtText.setText(text.get(0));
             }
             break;
-        }
- 
+        } 
         }
     }
     

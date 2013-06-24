@@ -18,4 +18,14 @@
         <requestFocus />
     </EditText>
 
+        <Button
+        android:id="@+id/btnSpeak"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_marginBottom="181dp"
+        android:layout_toRightOf="@+id/txtText"
+        android:text="Speech" />
+    
+    
 </RelativeLayout>
