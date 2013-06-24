@@ -7,7 +7,6 @@ import java.util.List;
 import org.apache.http.HttpResponse;
 import org.apache.http.NameValuePair;
 import org.apache.http.client.ClientProtocolException;
-import org.apache.http.client.HttpClient;
 import org.apache.http.client.entity.UrlEncodedFormEntity;
 import org.apache.http.client.methods.HttpPost;
 import org.apache.http.cookie.Cookie;
@@ -18,14 +17,11 @@ import org.apache.http.message.BasicNameValuePair;
 import android.app.Activity;
 import android.os.Bundle;
 import android.os.StrictMode;
-import android.text.method.KeyListener;
 import android.util.Log;
 import android.view.View;
 import android.view.View.OnClickListener;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.TextView;
-import android.widget.TextView.OnEditorActionListener;
 import android.content.Intent;
 
 public class LoginActivity extends Activity {
