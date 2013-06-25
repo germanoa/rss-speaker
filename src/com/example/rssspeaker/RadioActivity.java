@@ -6,15 +6,21 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 
 import android.app.Activity;
+import android.content.ActivityNotFoundException;
 import android.content.Intent;
+import android.media.AudioManager;
 import android.os.Bundle;
+import android.speech.RecognizerIntent;
 import android.speech.tts.TextToSpeech;
 import android.util.Log;
+import android.widget.EditText;
+import android.widget.Toast;
 
 import org.json.JSONArray;
 import org.json.JSONObject;
@@ -28,11 +34,12 @@ import org.apache.http.cookie.Cookie;
 import org.apache.http.impl.client.DefaultHttpClient;
 import org.apache.http.impl.cookie.BasicClientCookie;
 
-public class RadioActivity extends Activity implements TextToSpeech.OnInitListener{
+public class RadioActivity extends Activity implements TextToSpeech.OnInitListener, TextToSpeech.OnUtteranceCompletedListener {
 	
 	public class Story {
-		public Story(String content) {
+		public Story(String name, String content) {
 			this.content = content;
+			this.name = name;
 		}
 		
 		public String name;
@@ -40,8 +47,9 @@ public class RadioActivity extends Activity implements TextToSpeech.OnInitListen
 	}
 	
 	public class Feed {
-		public Feed(String id) {
+		public Feed(String id, String name) {
 			this.id = id;
+			this.name = name;
 		}
 		public String id;
 		public String name;
@@ -61,90 +69,126 @@ public class RadioActivity extends Activity implements TextToSpeech.OnInitListen
 	}
 	
 	public List<FeedsFolder> feedsfolder;
-	
+	protected static final int RESULT_SPEECH = 1;
 	private TextToSpeech tts;
-    private boolean feedsInitializated;
+    private boolean feedsInitializated,tts_finished,command_received;
 	//private EditText txtText;
-        
+    private String comandoVoz;
+	
+	@Override
+	public void onUtteranceCompleted(String utteranceId) {
+		    System.out.println(utteranceId);
+			if (utteranceId.equals("conteudo")) {
+				tts_finished=true;
+				System.out.println("tts finalizou.");			   			
+			}
+	}
+	
+	@Override
+    public void onInit(int arg0) {
+		System.out.println("onInit...");
+		if(arg0 == TextToSpeech.SUCCESS) {
+ 	    tts.setOnUtteranceCompletedListener(this);
+ 	   	while (!feedsInitializated) {
+ 	   		try {
+ 	   		Thread.sleep(1000);
+ 	   		}
+ 	   		catch(Exception e) {
+ 	   			e.printStackTrace();
+ 	   		}
+ 	   	}
+ 	   	tts_finished=false;
+ 	   	//tts.setLanguage(Locale.US);
+ 	   	speakOut("Iniciando leitura de notícias","conteudo");
+ 	   	}
+		System.out.println("saindo de onInit...");
+	}
+	
 	@Override
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_radio);
 
         //txtText = (EditText) findViewById(R.id.txtText);
-        //txtText.setText(cookieText);
-
-        //tts = new TextToSpeech(this, this);
-        feedsInitializated = false;
-        tts = new TextToSpeech(this, new TextToSpeech.OnInitListener() {
-            @Override
-            public void onInit(int arg0) {
-           if(arg0 == TextToSpeech.SUCCESS) 
-               {
-        	   	while (!feedsInitializated) {
-        	   		System.out.println("waiting");
-        	   		try {
-        	   		Thread.sleep(1000);
-        	   		}
-        	   		catch(Exception e) {
-        	   			e.printStackTrace();
-        	   		}
-        	   	}
-        	   		//tts.setLanguage(Locale.US);
-        	   		speakOut("tts inicializado");
-        	   		System.out.println("fase 2");
-        	   		speakOut("agora eh a fase 2");
-        	   		System.out.println("fase 3");
-        	   		speakOut("agora eh a fase 3");
-                	Iterator<FeedsFolder> iterator = feedsfolder.iterator();
-                	while (iterator.hasNext()) {
-                		FeedsFolder f = iterator.next();
-                		speakOut(f.name);
-                		for (int i=0;i<f.feeds.size();i++) {
-                    		System.out.println(f.feeds.get(i).id);
-                			speakOut(f.feeds.get(i).id);
-                		}
-                	}
-
-               }
-            }
-        });
         
+        feedsInitializated = false;
+        //tts = new TextToSpeech(this, new TextToSpeech.OnInitListener() {
+        tts = new TextToSpeech(this, this);
         
         //recebendo dados da activity anterior(Login)
-    	String[] cookieArray = new String[4];
-        Bundle extras = getIntent().getExtras();
-        if (extras != null) {
-            cookieArray = extras.getStringArray("cookieArray");
-        }
+    	//String[] cookieArray = new String[4];
+        //Bundle extras = getIntent().getExtras();
+        //if (extras != null) {
+        //    cookieArray = extras.getStringArray("cookieArray");
+        //}
         
         // buscando feeds      
-        BasicClientCookie cookie = new BasicClientCookie(cookieArray[0],cookieArray[1]);
-        cookie.setDomain(cookieArray[2]);
-        cookie.setPath(cookieArray[3]);        
-        String readCloudFeed = readNewsBlurFeed(cookie);
+        //BasicClientCookie cookie = new BasicClientCookie(cookieArray[0],cookieArray[1]);
+        //cookie.setDomain(cookieArray[2]);
+        //cookie.setPath(cookieArray[3]);        
+        //String readCloudFeed = readNewsBlurFeed(cookie);
         
         //criando os folders de feeds
-        feedsfolder = createFeedsFolder(readCloudFeed);
-    	feedsInitializated = true;        	
-        	// Lendo feeds.
-/*        	Iterator<FeedsFolder> iterator = feedsfolder.iterator();
-        	while (iterator.hasNext()) {
-        		FeedsFolder f = iterator.next();
-        		//speakOut(f.name);
-        		for (int i=0;i<f.feeds.size();i++) {
-            		System.out.println(f.feeds.get(i).id);
-        			//speakOut(f.feeds.get(i).id);
-        		}
-        	}
-*/        	
-     };
+        //feedsfolder = createFeedsFolder(readCloudFeed);
+
+		//story1
+		//Story story1 = new Story("Cidade alemã pretende distribuir CDs de Linux para prevenir lixo eletrônico pós windows XP","Com o fim do suporte da Microsoft ao Windows XP, o Conselho Municipal de Munique, na Alemanha, teme que milhares de computadores ainda em condições de operação, mas incompatíveis com o Windows 7 ou posteriores, virem lixo eletrônico.");
+		Story story1 = new Story("Cidade alemã pós windows XP","Com o fim do suporte da Microsoft ao Windows XP, o Conselho Municipal de Munique, na Alemanha, teme que milhares.");
+		//story2
+		Story story2 = new Story("Vaga para Desenvolvedor PHP em São Bernardo do Campo","A UNILOGIC, detentora dos sites ultradownloads.com.br e canaltech.com.br, está contratando programadores PHP, com sólidos conhecimento na linguagem, para integrar sua equipe. O ambiente de desenvolvimento conta com máquinas Linux e MacOS.");
+		//story3
+		Story story3 = new Story("Até que funciona este negócio","Impressionante que mão para fazer funcionar esta noticia. dalhe colorado!");		
+		// stories
+		List<Story> stories1 = new ArrayList<Story>();
+		stories1.add(story1);
+		stories1.add(story2);
+		stories1.add(story3);
+		//feed1
+		Feed feed1 = new Feed("9345","br-linux");
+		feed1.stories = stories1;
+		//lista de feeds
+		List<Feed> feeds = new ArrayList<Feed>();		
+		feeds.add(feed1);
+		//lista de folders
+        feedsfolder = new ArrayList<FeedsFolder>();
+		String namefolder = "Trabalho";
+		feedsfolder.add(new FeedsFolder(namefolder,feeds));
+        feedsInitializated = true;
+
+        new Thread(new Runnable() {
+            @Override
+            public void run() {
+            	while(!tts_finished){}
+            	System.out.println("entrando em playradio");
+            	playRadio();
+            }
+        }).start();
         
-    @Override
-    public void onResume() {
-        super.onResume();
-    	//speakOut("agora eu estou pronto para falar");
-    }
+       
+     };
+    
+     @Override
+     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
+    	 super.onActivityResult(requestCode, resultCode, data);
+         System.out.println("entrando em onactivityresult");
+    	 switch (requestCode) {
+         case RESULT_SPEECH: {
+             System.out.println("estamos aqui");
+             if (resultCode == RESULT_OK && null != data) {  
+                 ArrayList<String> text = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
+                 System.out.println("voz capturada: " + text.get(0));
+                 comandoVoz=text.get(0);
+                 //txtText.setText(text.get(0));
+     			 tts_finished=false;
+     			 command_received=true;
+             }
+             else {
+            	 speakOut("ó mestre, preciso que me cliques e mande um novo comando. obrigado","conteudo");
+             }
+             break;
+         } 
+         }
+     }
      
     @Override
     public void onDestroy() {
@@ -156,35 +200,62 @@ public class RadioActivity extends Activity implements TextToSpeech.OnInitListen
         super.onDestroy();
     }
  
-    @Override
-    public void onInit(int status) {
-        if (status == TextToSpeech.SUCCESS) {
-            int result = tts.setLanguage(Locale.US);
-            if (result == TextToSpeech.LANG_MISSING_DATA || result == TextToSpeech.LANG_NOT_SUPPORTED) {
-                Log.e("TTS", "This Language is not supported");
-                Intent installIntent = new Intent();
-                installIntent.setAction(TextToSpeech.Engine.ACTION_INSTALL_TTS_DATA);
-                startActivity(installIntent);
-            } else {
-            }
-        } else {
-            Log.e("TTS", "Initilization Failed!");
-        }
-    }
-        
-    private void speakOut(String text) {
-/*    	while(!ttsInitializated) {
-    		try {
-        		Thread.sleep(5000);        			
-    		}
-    		catch(Exception e) {
-    			e.printStackTrace();
-    		}
-    	}
-*/        //tts.speak(text, TextToSpeech.QUEUE_FLUSH, null);
-    	tts.speak(text, TextToSpeech.QUEUE_ADD, null);
+    private void playRadio() {
+    	Iterator<FeedsFolder> iterator = feedsfolder.iterator();
+        while (iterator.hasNext()) {
+        	FeedsFolder f = iterator.next();
+        	speakOut(f.name,"folder");
+        	for (int i=0;i<f.feeds.size();i++) {
+        		Feed feed = f.feeds.get(i);
+        		speakOut(feed.name, "feed");
+        		command_received=true;
+        		for (int j=0; j<feed.stories.size();j++) {
+        			command_received=false;
+        			Story story = feed.stories.get(j);
+        			speakOut(story.name, "titulo");
+         			speakOut(story.content, "conteudo");
+         			tts_finished=false;
+             		while (!command_received) {
+             			while(tts_finished) {
+             				tts_finished=false;
+             				Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);         
+                			intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, "en-US");
+                			try {
+                				//txtText.setText("");
+                				startActivityForResult(intent, RESULT_SPEECH);
+                				//command_received=true;
+                			} catch (ActivityNotFoundException a) {
+                				Toast t = Toast.makeText(getApplicationContext(),"Opps! Your device doesn't support Speech to Text",Toast.LENGTH_SHORT);
+                				t.show();
+                			}
+             			}
+             		}
+             		if (comandoVoz.contains("pr")) { //proximo
+             			//nop
+             		}
+             		else if (comandoVoz.contains("re")) { //repetir
+             			j--;             			
+             		}
+             		else if (comandoVoz.contains("an")) { //anterior
+             			if (j-2>=0) {
+             				j = j -2;	
+             			}
+             			else {
+             				j--;
+             			}
+             		}
+         		}
+         	}
+         }
     }
     
+    private void speakOut(String text, String name) {
+        HashMap<String, String> myHashAlarm = new HashMap<String, String>();
+        myHashAlarm.put(TextToSpeech.Engine.KEY_PARAM_STREAM, String.valueOf(AudioManager.STREAM_ALARM));
+        myHashAlarm.put(TextToSpeech.Engine.KEY_PARAM_UTTERANCE_ID, name);
+    	tts.speak(text, TextToSpeech.QUEUE_ADD, myHashAlarm);
+    }
+        
     public String readNewsBlurFeed(Cookie cookie) {
             StringBuilder builder = new StringBuilder();
             DefaultHttpClient client = new DefaultHttpClient();
@@ -265,8 +336,8 @@ public class RadioActivity extends Activity implements TextToSpeech.OnInitListen
         				feed_id = feed_id.replace("[","");
         				feed_id = feed_id.replace("]","");
         				story = readNewsBlurStories(feed_id);
-        				stories.add(new Story(story));
-                		feeds.add(new Feed(feed_id));
+        				stories.add(new Story("titulo", story));
+                		feeds.add(new Feed(feed_id,"nome"));
         	    	}
         			//Adiciona um folder
         			feedsfolder.add(new FeedsFolder(name,feeds));
@@ -277,6 +348,5 @@ public class RadioActivity extends Activity implements TextToSpeech.OnInitListen
 		}
         return feedsfolder;
 	}
-
 
 }
