@@ -18,15 +18,16 @@
         <activity
             android:label="@string/app_name"
             android:name="com.example.rssspeaker.RadioActivity">          
+         <intent-filter>
+                <action android:name="android.intent.action.MAIN" />
+                <category android:name="android.intent.category.LAUNCHER" />
+            </intent-filter> 
         </activity>
         
         <activity
             android:name="com.example.rssspeaker.LoginActivity"
             android:label="@string/app_name" >
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
-            </intent-filter> 
+    
   		</activity>        
         <activity
             android:name="com.example.rssspeaker.MainActivity"
