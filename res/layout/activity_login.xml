@@ -6,39 +6,41 @@
     android:paddingLeft="@dimen/activity_horizontal_margin"
     android:paddingRight="@dimen/activity_horizontal_margin"
     android:paddingTop="@dimen/activity_vertical_margin"
-    android:background="@color/red"
+    android:background="@color/blue_facebook"
     tools:context=".LoginActivity" >
 
-    <Button
-        android:id="@+id/btnLogin"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
-        android:layout_marginBottom="181dp"
-        android:text="@string/login" />
-
-    <EditText
-        android:id="@+id/txtUser"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_above="@+id/txtPass"
-        android:layout_marginBottom="56dp"
-        android:imeOptions="actionDone"
-		android:singleLine="true"
-        android:ems="10" >
-        <requestFocus />
-    </EditText>
+        <Button
+            android:id="@+id/btnLogin"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_centerHorizontal="true"
+            android:layout_centerVertical="true"
+            android:text="@string/login" />
 
         <EditText
-        android:id="@+id/txtPass"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_above="@+id/btnLogin"
-        android:layout_marginBottom="56dp"
-		android:imeOptions="actionDone"
-		android:singleLine="true"
-        android:ems="10" >
-    </EditText>
-    
+            android:id="@+id/txtUser"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_above="@+id/txtPass"
+            android:layout_centerHorizontal="true"
+            android:layout_centerVertical="true"
+            android:ems="10"
+            android:imeOptions="actionDone"
+            android:singleLine="true" />
+
+        <EditText
+            android:id="@+id/txtPass"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_above="@+id/btnLogin"
+            android:layout_alignLeft="@+id/txtUser"
+            android:layout_marginBottom="120dp"
+            android:ems="10"
+            android:imeOptions="actionDone"
+            android:singleLine="true" >
+
+            <requestFocus />
+        </EditText>
     
 </RelativeLayout>
