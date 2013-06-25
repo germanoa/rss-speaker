@@ -9,7 +9,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Locale;
+//import java.util.Locale;
 
 import android.app.Activity;
 import android.content.ActivityNotFoundException;
@@ -19,7 +19,6 @@ import android.os.Bundle;
 import android.speech.RecognizerIntent;
 import android.speech.tts.TextToSpeech;
 import android.util.Log;
-import android.widget.EditText;
 import android.widget.Toast;
 
 import org.json.JSONArray;
@@ -77,16 +76,13 @@ public class RadioActivity extends Activity implements TextToSpeech.OnInitListen
 	
 	@Override
 	public void onUtteranceCompleted(String utteranceId) {
-		    System.out.println(utteranceId);
 			if (utteranceId.equals("conteudo")) {
 				tts_finished=true;
-				System.out.println("tts finalizou.");			   			
 			}
 	}
 	
 	@Override
     public void onInit(int arg0) {
-		System.out.println("onInit...");
 		if(arg0 == TextToSpeech.SUCCESS) {
  	    tts.setOnUtteranceCompletedListener(this);
  	   	while (!feedsInitializated) {
@@ -101,7 +97,6 @@ public class RadioActivity extends Activity implements TextToSpeech.OnInitListen
  	   	//tts.setLanguage(Locale.US);
  	   	speakOut("Iniciando leitura de notícias","conteudo");
  	   	}
-		System.out.println("saindo de onInit...");
 	}
 	
 	@Override
@@ -109,28 +104,28 @@ public class RadioActivity extends Activity implements TextToSpeech.OnInitListen
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_radio);
 
-        //txtText = (EditText) findViewById(R.id.txtText);
         
         feedsInitializated = false;
-        //tts = new TextToSpeech(this, new TextToSpeech.OnInitListener() {
         tts = new TextToSpeech(this, this);
         
         //recebendo dados da activity anterior(Login)
-    	//String[] cookieArray = new String[4];
-        //Bundle extras = getIntent().getExtras();
+    	String[] cookieArray = new String[4];
+        Bundle extras = getIntent().getExtras();
         //if (extras != null) {
-        //    cookieArray = extras.getStringArray("cookieArray");
+            cookieArray = extras.getStringArray("cookieArray");
         //}
         
         // buscando feeds      
-        //BasicClientCookie cookie = new BasicClientCookie(cookieArray[0],cookieArray[1]);
-        //cookie.setDomain(cookieArray[2]);
-        //cookie.setPath(cookieArray[3]);        
-        //String readCloudFeed = readNewsBlurFeed(cookie);
+        BasicClientCookie cookie = new BasicClientCookie(cookieArray[0],cookieArray[1]);
+        cookie.setDomain(cookieArray[2]);
+        cookie.setPath(cookieArray[3]);        
+        String readCloudFeed = readNewsBlurFeed(cookie);
         
         //criando os folders de feeds
-        //feedsfolder = createFeedsFolder(readCloudFeed);
+        feedsfolder = createFeedsFolder(readCloudFeed);
 
+        //BLOCO PARA TESTE OFFLINE
+        /*
 		//story1
 		//Story story1 = new Story("Cidade alemã pretende distribuir CDs de Linux para prevenir lixo eletrônico pós windows XP","Com o fim do suporte da Microsoft ao Windows XP, o Conselho Municipal de Munique, na Alemanha, teme que milhares de computadores ainda em condições de operação, mas incompatíveis com o Windows 7 ou posteriores, virem lixo eletrônico.");
 		Story story1 = new Story("Cidade alemã pós windows XP","Com o fim do suporte da Microsoft ao Windows XP, o Conselho Municipal de Munique, na Alemanha, teme que milhares.");
@@ -153,13 +148,14 @@ public class RadioActivity extends Activity implements TextToSpeech.OnInitListen
         feedsfolder = new ArrayList<FeedsFolder>();
 		String namefolder = "Trabalho";
 		feedsfolder.add(new FeedsFolder(namefolder,feeds));
+		*/
+        
         feedsInitializated = true;
 
         new Thread(new Runnable() {
             @Override
             public void run() {
             	while(!tts_finished){}
-            	System.out.println("entrando em playradio");
             	playRadio();
             }
         }).start();
@@ -178,7 +174,6 @@ public class RadioActivity extends Activity implements TextToSpeech.OnInitListen
                  ArrayList<String> text = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
                  System.out.println("voz capturada: " + text.get(0));
                  comandoVoz=text.get(0);
-                 //txtText.setText(text.get(0));
      			 tts_finished=false;
      			 command_received=true;
              }
@@ -209,11 +204,11 @@ public class RadioActivity extends Activity implements TextToSpeech.OnInitListen
         		Feed feed = f.feeds.get(i);
         		speakOut(feed.name, "feed");
         		command_received=true;
+        		System.out.println(feed.stories.toString());
         		for (int j=0; j<feed.stories.size();j++) {
         			command_received=false;
         			Story story = feed.stories.get(j);
-        			speakOut(story.name, "titulo");
-         			speakOut(story.content, "conteudo");
+        			speakOut(story.name, "conteudo");
          			tts_finished=false;
              		while (!command_received) {
              			while(tts_finished) {
@@ -221,16 +216,17 @@ public class RadioActivity extends Activity implements TextToSpeech.OnInitListen
              				Intent intent = new Intent(RecognizerIntent.ACTION_RECOGNIZE_SPEECH);         
                 			intent.putExtra(RecognizerIntent.EXTRA_LANGUAGE_MODEL, "en-US");
                 			try {
-                				//txtText.setText("");
                 				startActivityForResult(intent, RESULT_SPEECH);
-                				//command_received=true;
                 			} catch (ActivityNotFoundException a) {
                 				Toast t = Toast.makeText(getApplicationContext(),"Opps! Your device doesn't support Speech to Text",Toast.LENGTH_SHORT);
                 				t.show();
                 			}
              			}
              		}
-             		if (comandoVoz.contains("pr")) { //proximo
+             		if (comandoVoz.contains("de")) { //detalhes
+             			speakOut(story.content, "cont");
+             		}
+             		else if (comandoVoz.contains("pr")) { //proximo
              			//nop
              		}
              		else if (comandoVoz.contains("re")) { //repetir
@@ -281,7 +277,6 @@ public class RadioActivity extends Activity implements TextToSpeech.OnInitListen
             } catch (IOException e) {
               e.printStackTrace();
             }
-            //System.out.println(builder.toString());
             return builder.toString();
           }
 
@@ -310,7 +305,6 @@ public class RadioActivity extends Activity implements TextToSpeech.OnInitListen
             } catch (IOException e) {
               e.printStackTrace();
             }
-            //System.out.println(builder.toString());
             return builder.toString();
     }
 
@@ -336,8 +330,14 @@ public class RadioActivity extends Activity implements TextToSpeech.OnInitListen
         				feed_id = feed_id.replace("[","");
         				feed_id = feed_id.replace("]","");
         				story = readNewsBlurStories(feed_id);
-        				stories.add(new Story("titulo", story));
-                		feeds.add(new Feed(feed_id,"nome"));
+        				List<String> story_title = extractStoryTitle(story);
+        				List<String> story_content = extractStoryContent(story);
+        				for (int k=0;k<story_title.size();k++) {
+        					stories.add(new Story(story_title.get(k), story_content.get(k)));	
+        				}
+        				Feed feed = new Feed(feed_id,"nome");
+        				feed.stories = stories;
+                		feeds.add(feed);
         	    	}
         			//Adiciona um folder
         			feedsfolder.add(new FeedsFolder(name,feeds));
@@ -349,4 +349,39 @@ public class RadioActivity extends Activity implements TextToSpeech.OnInitListen
         return feedsfolder;
 	}
 
+	public List<String> extractStoryTitle(String story) {
+		List<String> title = new ArrayList<String>();
+		try {
+			System.out.println(story);
+			JSONObject object = new JSONObject(story);
+			JSONArray stories = new JSONArray(object.getString("stories"));
+        	for (int i=0; i< stories.length();i++) {
+        		JSONObject j = stories.getJSONObject(i);
+        		title.add(j.get("story_title").toString());
+        		System.out.println(j.get("story_title").toString());
+        	}
+		}catch(Exception e) {
+			e.printStackTrace();
+		}
+		return title;
+	}
+	
+	public List<String> extractStoryContent(String story) {
+		List<String> content = new ArrayList<String>();
+		try {
+			System.out.println(story);
+			JSONObject object = new JSONObject(story);
+			JSONArray stories = new JSONArray(object.getString("stories"));
+        	for (int i=0; i< stories.length();i++) {
+        		JSONObject j = stories.getJSONObject(i);
+        		String content_s = j.get("story_content").toString().replaceAll("\\<.*?>","");
+        		content.add(content_s);
+        		System.out.println(content_s);
+        	}
+		}catch(Exception e) {
+			e.printStackTrace();
+		}
+		return content;
+	}
+	
 }
