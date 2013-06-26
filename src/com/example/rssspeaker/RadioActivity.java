@@ -19,6 +19,9 @@ import android.os.Bundle;
 import android.speech.RecognizerIntent;
 import android.speech.tts.TextToSpeech;
 import android.util.Log;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.Button;
 import android.widget.Toast;
 
 import org.json.JSONArray;
@@ -80,6 +83,9 @@ public class RadioActivity extends Activity implements TextToSpeech.OnInitListen
 				tts_finished=true;
 			}
 	}
+
+	private Button btnExit;
+    
 	
 	@Override
     public void onInit(int arg0) {
@@ -103,7 +109,23 @@ public class RadioActivity extends Activity implements TextToSpeech.OnInitListen
     public void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_radio);
-
+        
+        OnClickListener menuOnClickListener = new OnClickListener() {
+            @Override
+            public void onClick(final View arg0) {
+            	 switch(arg0.getId()){
+                 	case R.id.btnExit:
+                 		Intent intent = new Intent(Intent.ACTION_MAIN); finish();
+                 		break;
+            	 }
+            }
+        };
+        
+        btnExit = (Button) findViewById(R.id.btnExit);
+        // button on click event
+        btnExit.setOnClickListener(menuOnClickListener);
+        
+        
         
         feedsInitializated = false;
         tts = new TextToSpeech(this, this);
@@ -174,12 +196,14 @@ public class RadioActivity extends Activity implements TextToSpeech.OnInitListen
                  ArrayList<String> text = data.getStringArrayListExtra(RecognizerIntent.EXTRA_RESULTS);
                  System.out.println("voz capturada: " + text.get(0));
                  comandoVoz=text.get(0);
-     			 tts_finished=false;
-     			 command_received=true;
              }
              else {
-            	 speakOut("ó mestre, preciso que me cliques e mande um novo comando. obrigado","conteudo");
+            	 comandoVoz="pr";
+            	 finishActivity(RESULT_SPEECH);
+            	 //speakOut("ó mestre, preciso que me cliques e mande um novo comando. obrigado","conteudo");
              }
+ 			 tts_finished=false;
+ 			 command_received=true;
              break;
          } 
          }
@@ -196,9 +220,12 @@ public class RadioActivity extends Activity implements TextToSpeech.OnInitListen
     }
  
     private void playRadio() {
-    	Iterator<FeedsFolder> iterator = feedsfolder.iterator();
-        while (iterator.hasNext()) {
-        	FeedsFolder f = iterator.next();
+    	int folder = 1;
+    	//Iterator<FeedsFolder> iterator = feedsfolder.iterator();
+        //while (iterator.hasNext()) {
+    	while (true) {
+        	//FeedsFolder f = iterator.next();
+        	FeedsFolder f = feedsfolder.get(folder);
         	speakOut(f.name,"folder");
         	for (int i=0;i<f.feeds.size();i++) {
         		Feed feed = f.feeds.get(i);
@@ -233,14 +260,33 @@ public class RadioActivity extends Activity implements TextToSpeech.OnInitListen
              			j--;             			
              		}
              		else if (comandoVoz.contains("an")) { //anterior
-             			if (j-2>=0) {
+             			if (j-1>=0) {
+             				System.out.println("j>=1");
              				j = j -2;	
              			}
              			else {
+             				System.out.println("j<1");
              				j--;
              			}
              		}
-         		}
+              		else if (comandoVoz.contains("ca")) { //casa
+              			System.out.println("indo para o folder casa");
+              			i=f.feeds.size();
+              			j=feed.stories.size();
+              			folder=1;
+              		}
+              		else if (comandoVoz.contains("tra")) { //trabalho
+              			System.out.println("indo para o folder trabalho");
+              			i=f.feeds.size();
+              			j=feed.stories.size();
+              			folder=0;
+              		}
+              		else if (comandoVoz.contains("novo")) { //muda feed
+              			System.out.println("pulando feed");
+              			j=feed.stories.size();
+              		}
+
+        		}
          	}
          }
     }
