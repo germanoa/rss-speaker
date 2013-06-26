@@ -9,6 +9,14 @@
 	android:background="@color/blue_facebook"
     tools:context=".RadioActivity" >
 
-        
+        <Button
+            android:id="@+id/btnExit"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_alignParentBottom="true"
+            android:layout_centerHorizontal="true"
+            android:layout_centerVertical="true"
+            android:text="@string/sair" />
+    
     
 </RelativeLayout>
